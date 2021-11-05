@@ -1,0 +1,588 @@
+components:
+   schemas:
+      API:
+         description: 'API : A Set of related API Methods (YAML)'
+         example: API
+         properties:
+            Categories:
+               description: No Description for Categories
+               example: Categories
+               pattern: ''
+               type: string
+            Description:
+               description: No Description for Description
+               example: Description
+               pattern: ''
+               type: string
+            Documentation:
+               description: 'No Description for Documentation '
+               example: Documentation
+               pattern: ''
+               type: string
+            Name:
+               description: API Name
+               example: Name
+               pattern: ''
+               type: string
+            Provider_Name:
+               description: No Description for Provider_Name
+               example: Provider_Name
+               pattern: ''
+               type: string
+            Usage_Policies:
+               description: "Usage Policies that can be applied on this API\nAPI :\
+                  \ Usage Policy Profile \xE2\u20AC\u201C Restrict access to APIs\
+                  \ for API Consumers:\nCheck / enforce data values in requests /\
+                  \ event subscriptions\nRemove data for responses / event notifications\n\
+                  Limit Usage (Rate, Time-Period, Volume, Geo-Area)\nApplicable UE\
+                  \ (see UE Database)\nAssign UE priorities \nEmergency filter (for\
+                  \ invocations, notifications)"
+               example: Usage_Policies
+               format: date-time
+               pattern: ''
+               type: string
+            YAML:
+               description: No Description for YAML
+               example: YAML
+               pattern: ''
+               type: string
+         required:
+         - Name
+         - Description
+         - Provider_Name
+         - YAML
+         - Usage_Policies
+         - Documentation
+         - Categories
+         type: object
+      API_Bundle:
+         description: "Set of Related APIs, defined in the Catalog, for industry specific\
+            \ usage\\u000b(HealthCare, Telecom, Manufacturing, Finance, \xE2\u20AC\
+            \xA6)"
+         example: API_Bundle
+         properties:
+            Industry:
+               description: No Description for Industry
+               example: Industry
+               pattern: ''
+               type: string
+            Name:
+               description: No Description for Name
+               example: Name
+               pattern: ''
+               type: string
+            Use_Case:
+               description: No Description for Use Case
+               example: Use_Case
+               pattern: ''
+               type: string
+         required:
+         - Name
+         - Industry
+         - Use_Case
+         type: object
+      API_Configuration:
+         description: No Description for API_Configuration
+         example: API_Configuration
+         properties:
+            API_Manager:
+               description: No Description for API Manager
+               example: API_Manager
+               pattern: ''
+               type: string
+            API_Status:
+               description: No Description for API Status
+               example: API_Status
+               pattern: ''
+               type: string
+            Charging_Policies:
+               description: 'No Description for Charging Policies '
+               example: Charging_Policies_
+               pattern: ''
+               type: string
+            KPIs_of_Interest:
+               description: 'No Description for KPIs of Interest '
+               example: KPIs_of_Interest_
+               pattern: ''
+               type: string
+            Usage_Policies:
+               description: 'No Description for Usage Policies '
+               example: Usage_Policies_
+               pattern: ''
+               type: string
+         required:
+         - API_Status
+         - Usage_Policies
+         - API_Manager
+         - Charging_Policies
+         - KPIs_of_Interest
+         type: object
+      API_Consumers:
+         description: No Description for API Consumers
+         example: API_Consumers
+         properties:
+            ConsumerName:
+               description: No Description for ConsumerName
+               example: ConsumerName
+               pattern: ''
+               type: string
+            Contact_Details:
+               description: No Description for Contact Details
+               example: Contact_Details
+               pattern: ''
+               type: string
+            Credentials:
+               description: 'No Description for Credentials '
+               example: Credentials
+               pattern: ''
+               type: string
+         required:
+         - ConsumerName
+         - Contact_Details
+         - Credentials
+         type: object
+      API_Set:
+         description: 'API Set
+
+            Set of Related APIs, defined in the account for usage by an organisation
+
+            Can be extracted from Catalog Bundles'
+         example: API_Set
+         properties:
+            Name:
+               description: No Description for Name
+               example: Name
+               pattern: ''
+               type: string
+         required:
+         - Name
+         type: object
+      Account:
+         description: No Description for Account
+         example: Account
+         properties:
+            AccountName:
+               description: Account Name
+               example: AccountName
+               pattern: ''
+               type: string
+            Industry:
+               description: Informationnal Data
+               example: Manufacturing_IoT_Drones_Automotive
+               pattern: ''
+               type: string
+            Portal_Login_Credentials:
+               description: No Description for Portal Login Credentials
+               example: Portal_Login_Credentials
+               pattern: ''
+               type: string
+            Use_Case:
+               description: Informationnal Data
+               example: Streaming_Robotic_Control_Device_Monitoring
+               pattern: TTT
+               type: string
+            Volume:
+               description: Informationnal Data
+               example: Numerous_Devices_Low_Traffic
+               pattern: ''
+               type: string
+         required:
+         - AccountName
+         - Industry
+         - Use_Case
+         - Volume
+         - Portal_Login_Credentials
+         type: object
+      Service:
+         description: No Description for Service
+         example: Service
+         properties:
+            Credentials:
+               description: 'No Description for Credentials '
+               example: Credentials
+               pattern: ''
+               type: string
+            Industry:
+               description: No Description for Industry
+               example: Industry
+               pattern: ''
+               type: string
+            Name:
+               description: No Description for Name
+               example: Name
+               pattern: ''
+               type: string
+            Portal_Login_Credentials:
+               description: No Description for Portal Login Credentials
+               example: Portal_Login_Credentials
+               pattern: ''
+               type: string
+            Use_Case:
+               description: No Description for Use Case
+               example: Use_Case
+               pattern: ''
+               type: string
+            VolumeOrg:
+               description: No Description for VolumeOrg
+               example: Column_1_
+               pattern: ''
+               type: string
+         required:
+         - Name
+         - Credentials
+         - Industry
+         - Use_Case
+         - Portal_Login_Credentials
+         type: object
+      UsagePolicy:
+         description: No Description for UsagePolicy
+         example: UsagePolicy
+         properties:
+            VariableName:
+               description: No Description for VariableName
+               example: VariableName
+               pattern: ''
+               type: string
+            VariableSemantic:
+               description: No Description for VariableSemantic
+               example: VariableSemantic
+               pattern: ''
+               type: string
+            VariableType:
+               description: No Description for VariableType
+               example: VariableType
+               pattern: ''
+               type: string
+         required:
+         - VariableName
+         - VariableSemantic
+         - VariableType
+         type: object
+      UsagePolicyConfiguration:
+         description: No Description for UsagePolicyConfiguration
+         example: UsagePolicyConfiguration
+         properties:
+            VariableName:
+               description: No Description for VariableName
+               example: VariableName
+               pattern: ''
+               type: string
+            VariableValue:
+               description: No Description for VariableValue
+               example: VariableValue
+               pattern: ''
+               type: string
+         required:
+         - VariableName
+         - VariableValue
+         type: object
+   securitySchemes:
+      Oauth-Security-Scheme-Info:
+         description: Oauth-Security-Scheme-Info-Description
+         flows:
+            implicit:
+               authorizationUrl: https://oauth.com/auth
+               refreshUrl: https://oauth.com/refresh
+               scopes:
+                  scope-2: ''
+         type: oauth2
+info:
+   contact:
+      email: bheuse@gmail.com
+      name: Bernard Heuse
+      url: https://www.gadseca.org/
+   description: Business Data Model.  This is generated, modify source architect data
+      model instead.
+   license:
+      name: Apache 2.0
+      url: https://www.apache.org/licenses/LICENSE-2.0
+   title: Sample Business Data Model
+   version: 1.0.0
+openapi: 3.0.2
+paths:
+   /accounts:
+      description: The REST endpoint/path used to list and create zero or more `Account`.  This
+         path contains a `GET` and `POST` operation to perform the list and create
+         tasks, respectively.
+      get:
+         description: Gets a list of all `Account` entities.
+         operationId: getAccounts
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        items:
+                           $ref: '#/components/schemas/Account'
+                        type: array
+               description: Successful response - returns an array of `Account` entities.
+         summary: List All Accounts
+      post:
+         description: Creates a new instance of a `Account`.
+         operationId: createAccount
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/Account'
+            description: A new `Account` to be created.
+            required: true
+         responses:
+            '201':
+               description: Successful response.
+         summary: Create a Account
+      summary: Path used to manage the list of accounts.
+   /accounts/{accountId}:
+      delete:
+         description: Deletes an existing `Account`.
+         operationId: deleteAccount
+         responses:
+            '204':
+               description: Successful response.
+         summary: Delete a Account
+      description: The REST endpoint/path used to get, update, and delete single instances
+         of an `Account`.  This path contains `GET`, `PUT`, and `DELETE` operations
+         used to perform the get, update, and delete tasks, respectively.
+      get:
+         description: Gets the details of a single instance of a `Account`.
+         operationId: getAccount
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        $ref: '#/components/schemas/Account'
+               description: Successful response - returns a single `Account`.
+         summary: Get a Account
+      parameters:
+      -  description: A unique identifier for a `Account`.
+         in: path
+         name: accountId
+         required: true
+         schema:
+            type: string
+      put:
+         description: Updates an existing `Account`.
+         operationId: updateAccount
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/Account'
+            description: Updated `Account` information.
+            required: true
+         responses:
+            '202':
+               description: Successful response.
+         summary: Update a Account
+      summary: Path used to manage a single Account.
+   /catalog/api_bundles:
+      description: The REST endpoint/path used to list and create zero or more `API_Bundle`.  This
+         path contains a `GET` and `POST` operation to perform the list and create
+         tasks, respectively.
+      get:
+         description: Gets a list of all `API_Bundle` entities.
+         operationId: getAPI_Bundles
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        items:
+                           $ref: '#/components/schemas/API_Bundle'
+                        type: array
+               description: Successful response - returns an array of `API_Bundle`
+                  entities.
+         summary: List All API_Bundles
+      summary: Path used to manage the list of api_bundles.
+   /catalog/api_bundles/{api_bundleId}:
+      description: The REST endpoint/path used to get, update, and delete single instances
+         of an `API_Bundle`.  This path contains `GET`, `PUT`, and `DELETE` operations
+         used to perform the get, update, and delete tasks, respectively.
+      get:
+         description: Gets the details of a single instance of a `API_Bundle`.
+         operationId: getAPI_Bundle
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        $ref: '#/components/schemas/API_Bundle'
+               description: Successful response - returns a single `API_Bundle`.
+         summary: Get a API_Bundle
+      parameters:
+      -  description: A unique identifier for a `API_Bundle`.
+         in: path
+         name: api_bundleId
+         required: true
+         schema:
+            type: string
+      summary: Path used to manage a single API_Bundle.
+   /catalog/apis:
+      description: The REST endpoint/path used to list and create zero or more `API`.  This
+         path contains a `GET` and `POST` operation to perform the list and create
+         tasks, respectively.
+      get:
+         description: Gets a list of all `API` entities.
+         operationId: getAPIs
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        items:
+                           $ref: '#/components/schemas/API'
+                        type: array
+               description: Successful response - returns an array of `API` entities.
+         summary: List All APIs
+      post:
+         description: Creates a new instance of a `API`.
+         operationId: createAPI
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/API'
+            description: A new `API` to be created.
+            required: true
+         responses:
+            '201':
+               description: Successful response.
+         summary: Create a API
+      summary: Path used to manage the list of apis.
+   /catalog/apis/{apiId}:
+      delete:
+         description: Deletes an existing `API`.
+         operationId: deleteAPI
+         responses:
+            '204':
+               description: Successful response.
+         summary: Delete a API
+      description: The REST endpoint/path used to get, update, and delete single instances
+         of an `API`.  This path contains `GET`, `PUT`, and `DELETE` operations used
+         to perform the get, update, and delete tasks, respectively.
+      get:
+         description: Gets the details of a single instance of a `API`.
+         operationId: getAPI
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        $ref: '#/components/schemas/API'
+               description: Successful response - returns a single `API`.
+         summary: Get a API
+      parameters:
+      -  description: A unique identifier for a `API`.
+         in: path
+         name: apiId
+         required: true
+         schema:
+            type: string
+      put:
+         description: Updates an existing `API`.
+         operationId: updateAPI
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/API'
+            description: Updated `API` information.
+            required: true
+         responses:
+            '202':
+               description: Successful response.
+         summary: Update a API
+      summary: Path used to manage a single API.
+   /services:
+      description: The REST endpoint/path used to list and create zero or more `Service`.  This
+         path contains a `GET` and `POST` operation to perform the list and create
+         tasks, respectively.
+      get:
+         description: Gets a list of all `Service` entities.
+         operationId: getServices
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        items:
+                           $ref: '#/components/schemas/Service'
+                        type: array
+               description: Successful response - returns an array of `Service` entities.
+         summary: List All Services
+      post:
+         description: Creates a new instance of a `Service`.
+         operationId: createService
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/Service'
+            description: A new `Service` to be created.
+            required: true
+         responses:
+            '201':
+               description: Successful response.
+         summary: Create a Service
+      summary: Path used to manage the list of services.
+   /services/{serviceId}:
+      delete:
+         description: Deletes an existing `Service`.
+         operationId: deleteService
+         responses:
+            '204':
+               description: Successful response.
+         summary: Delete a Service
+      description: The REST endpoint/path used to get, update, and delete single instances
+         of an `Service`.  This path contains `GET`, `PUT`, and `DELETE` operations
+         used to perform the get, update, and delete tasks, respectively.
+      get:
+         description: Gets the details of a single instance of a `Service`.
+         operationId: getService
+         responses:
+            '200':
+               content:
+                  application/json:
+                     schema:
+                        $ref: '#/components/schemas/Service'
+               description: Successful response - returns a single `Service`.
+         summary: Get a Service
+      parameters:
+      -  description: A unique identifier for a `Service`.
+         in: path
+         name: serviceId
+         required: true
+         schema:
+            type: string
+      put:
+         description: Updates an existing `Service`.
+         operationId: updateService
+         requestBody:
+            content:
+               application/json:
+                  schema:
+                     $ref: '#/components/schemas/Service'
+            description: Updated `Service` information.
+            required: true
+         responses:
+            '202':
+               description: Successful response.
+         summary: Update a Service
+      summary: Path used to manage a single Service.
+security:
+-  Oauth-Security-Scheme-Info:
+   - scope-2
+servers:
+-  description: Sample Play Ground Release 22-03
+   url: http://${DOMAIN}/${VERSION}/
+   variables:
+      DOMAIN:
+         default: sample.sample.com
+         description: The Sample URL
+      VERSION:
+         default: 22-03
+         description: Release Version
+tags:
+-  description: Sample Business Data Model
+   name: Sample

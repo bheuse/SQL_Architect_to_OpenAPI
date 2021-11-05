@@ -32,29 +32,30 @@ Table:
         Special Attributes
             Name          = _PATH (Generates a CRUD list of operations)
                             _PATH default value = Path Prefix
+                            _PATH contains read-only => only get - otherwise get / put / post / delete
             Physical Name = PATH Name
 
+    The "OpenAPI" object is used to define the API additional detail:
+        "title"           : Physical Name used as API Title
+        "description"     : Physical Name + Remarks used as API Description
+        "version"         : Physical Name used as API Version
+        "contacts"        : Remarks in JSON Format used as API Contacts
+        "license"         : Remarks in JSON Format used as API License
+        "tags"            : Remarks in JSON Format used as API tags
+        "servers"         : Remarks in JSON Format used as API Servers
+        "security"        : Remarks in JSON Format used as API Security
+        "securitySchemes" : Remarks in JSON Format used as API SecuritySchemes
 """
 
-default_data_model = "NEF_MarketPlace_DataModel"
+default_data_model = "API_Data_Model_Sample"
 
 
-open_api_yaml = {"openapi": "3.0.2",
-                 "info": {
-                     "title": "NEF Business Model",
-                     "version": "1.0.0",
-                     "description": "Amdocs NEF Business Model. This is generated, modify source architect data model instead.",
-                     "contact": {
-                         "name": "Bernard Heuse",
-                         "url": "https://www.amdocs.com/",
-                         "email": "bheuse@amdocs.com"
-                 }}}
 
-
-paths_template = """
+paths_template_list = """
         "${PATH_PREFIX}/${table}s": {
             "summary": "Path used to manage the list of ${table}s.",
             "description": "The REST endpoint/path used to list and create zero or more `${TABLE}`.  This path contains a `GET` and `POST` operation to perform the list and create tasks, respectively.",
+
             "get": {
                 "responses": {
                     "200": {
@@ -74,7 +75,9 @@ paths_template = """
                 "operationId": "get${TABLE}s",
                 "summary": "List All ${TABLE}s",
                 "description": "Gets a list of all `${TABLE}` entities."
-            },
+            }
+"""
+paths_template_create = """
             "post": {
                 "requestBody": {
                     "description": "A new `${TABLE}` to be created.",
@@ -96,10 +99,14 @@ paths_template = """
                 "summary": "Create a ${TABLE}",
                 "description": "Creates a new instance of a `${TABLE}`."
             }
-        },
+        
+"""
+paths_template_read = """
+        
         "${PATH_PREFIX}/${table}s/{${table}Id}": {
             "summary": "Path used to manage a single ${TABLE}.",
             "description": "The REST endpoint/path used to get, update, and delete single instances of an `${TABLE}`.  This path contains `GET`, `PUT`, and `DELETE` operations used to perform the get, update, and delete tasks, respectively.",
+
             "get": {
                 "responses": {
                     "200": {
@@ -116,7 +123,10 @@ paths_template = """
                 "operationId": "get${TABLE}",
                 "summary": "Get a ${TABLE}",
                 "description": "Gets the details of a single instance of a `${TABLE}`."
-            },
+            }
+
+"""
+paths_template_update = """
             "put": {
                 "requestBody": {
                     "description": "Updated `${TABLE}` information.",
@@ -147,7 +157,9 @@ paths_template = """
                 "operationId": "delete${TABLE}",
                 "summary": "Delete a ${TABLE}",
                 "description": "Deletes an existing `${TABLE}`."
-            },
+            }
+"""
+paths_template_parameters = """            
             "parameters": [
                 {
                     "name": "${table}Id",
@@ -159,7 +171,6 @@ paths_template = """
                     "required": true
                 }
             ]
-        }
 
 """
 
@@ -210,7 +221,7 @@ def collect_links():
         ignore = False
         for tlink in project["play-pen"]["table-link"]:
             if (tlink["@rLineColor"] == "0x999999"):
-                ignore = True # Ignore Grey Links
+                ignore = True  # Ignore Grey Links
                 continue
             if (tlink["@relationship-ref"] == relation["@id"]):
                 link["Description"] = clean_name(tlink["@pkLabelText"]) + " " + clean_name(tlink["@fkLabelText"])
@@ -250,6 +261,9 @@ def handle_attribute(data_type, att):
     if (name == "_PATH"):
         data_type["PATH"]        = att["@physicalName"]
         data_type["PATH_PREFIX"] = att["@defaultValue"]
+        data_type["PATH_OPERATION"] = "READ-WRITE"
+        if (att["remarks"] is not None):
+            data_type["PATH_OPERATION"] = att["remarks"]
     this_property["type"] = "INVALID"
     if (att["remarks"] is None):
         this_property["description"] = "No Description for " + att["@name"]
@@ -291,10 +305,12 @@ def collect_tables():
                     data_type, att_name = handle_attribute(data_type, col)
             else:
                 data_type, att_name = handle_attribute(data_type, column)
+        if ("ignore" in data_type["example"]) :
+            continue
         entities[entity_name] = data_type
 
 
-def paths_table(table: str, path_prefix: str = ""):
+def paths_table(table: str, path_prefix: str = "", paths_template=""):
     l_paths_template = paths_template.replace("${PATH_PREFIX}", path_prefix)
     l_paths_template = l_paths_template.replace("${TABLE}", table)
     l_paths_template = l_paths_template.replace("${table}", table.lower())
@@ -302,15 +318,20 @@ def paths_table(table: str, path_prefix: str = ""):
 
 
 def create_path():
-    l_paths_template = ""
+    f_paths_template = ""
     sep = ""
     for entity in entities:
         if ("PATH" in entities[entity]):
+            if ("read-only" in entities[entity]["PATH_OPERATION"].lower()):
+                l_paths_template = paths_template_list + " } ," + paths_template_read + "," + paths_template_parameters + " }"
+            else:
+                l_paths_template = paths_template_list + " ," + paths_template_create + " } ," + paths_template_read + "," + paths_template_update + "," + paths_template_parameters + " }"
+
             path   = entities[entity]["PATH"]
             prefix = entities[entity]["PATH_PREFIX"]
-            l_paths_template = l_paths_template + sep + paths_table(path, prefix)
+            f_paths_template = f_paths_template + sep + paths_table(path, path_prefix=prefix, paths_template=l_paths_template)
             sep = ", "
-    return l_paths_template
+    return f_paths_template
 
 
 def let_do_it(data_model : str):
@@ -348,15 +369,67 @@ def let_do_it(data_model : str):
 
     paths_to_create = json.loads("{" + create_path() + "}")
 
+    open_api_yaml = dict()
+    open_api_yaml["openapi"] = "3.0.2"
+    open_api_yaml["info"] = {}
+    open_api_yaml["info"]["title"] = "Business Data Model"
+    open_api_yaml["info"]["version"] = "1.0.0"
+    open_api_yaml["info"]["description"] = "Business Data Model. This is generated, modify source SQL Architect data model instead."
+    open_api_yaml["info"]["contact"] = {}
+    open_api_yaml["info"]["contact"]["name"]  = "Bernard Heuse"
+    open_api_yaml["info"]["contact"]["url"]   = "https://www.gadseca.org/"
+    open_api_yaml["info"]["contact"]["email"] = "bheuse@gmail.com"
+
+    if "OpenAPI" in entities :
+        if ("title" in entities["OpenAPI"]["properties"]):
+            open_api_yaml["info"]["title"]       = entities["OpenAPI"]["properties"]["title"]["example"]
+
+        if ("version" in entities["OpenAPI"]["properties"]):
+            open_api_yaml["info"]["version"]     = entities["OpenAPI"]["properties"]["version"]["example"]
+
+        if ("description" in entities["OpenAPI"]["properties"]):
+            open_api_yaml["info"]["description"] = entities["OpenAPI"]["properties"]["description"]["example"] + " " + entities["OpenAPI"]["properties"]["description"]["description"]
+
+        if ("contact" in entities["OpenAPI"]["properties"]):
+            contacts = json.loads(entities["OpenAPI"]["properties"]["contact"]["description"])
+            open_api_yaml["info"]["contact"] = contacts
+
+        if ("security" in entities["OpenAPI"]["properties"]):
+            security = json.loads(entities["OpenAPI"]["properties"]["security"]["description"])
+            open_api_yaml["security"] = security
+
+        if ("license" in entities["OpenAPI"]["properties"]):
+            license = json.loads(entities["OpenAPI"]["properties"]["license"]["description"])
+            open_api_yaml["info"]["license"] = license
+
+        if ("tags" in entities["OpenAPI"]["properties"]):
+            tags = json.loads(entities["OpenAPI"]["properties"]["tags"]["description"])
+            open_api_yaml["tags"] = tags
+
+        if ("servers" in entities["OpenAPI"]["properties"]):
+            servers = json.loads(entities["OpenAPI"]["properties"]["servers"]["description"])
+            open_api_yaml["servers"] = servers
+
+        if ("securitySchemes" in entities["OpenAPI"]["properties"]):
+            securitySchemes = json.loads(entities["OpenAPI"]["properties"]["securitySchemes"]["description"])
+            open_api_yaml["components"] = dict()
+            open_api_yaml["components"]["securitySchemes"] = securitySchemes
+
+        del entities["OpenAPI"]
+
     for entity in entities:
         del entities[entity]["TABLE"]
         del entities[entity]["RELATIONS"]
         del entities[entity]["NAME"]
+        if ("PATH_OPERATION" in entities[entity]):  del entities[entity]["PATH_OPERATION"]
         if ("PATH_PREFIX" in entities[entity]):  del entities[entity]["PATH_PREFIX"]
-        if ("PATH"  in entities[entity]):  del entities[entity]["PATH"]
+        if ("PATH"  in entities[entity]):        del entities[entity]["PATH"]
 
     open_api_yaml["paths"] = paths_to_create
-    open_api_yaml["components"] = {"schemas": entities}
+    if "components" in open_api_yaml:
+        open_api_yaml["components"]["schemas"] = entities
+    else:
+        open_api_yaml["components"] = {"schemas": entities}
 
     yaml_text = yaml.safe_dump(open_api_yaml, indent=3, default_flow_style=False)
     print(yaml_text)
