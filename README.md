@@ -7,6 +7,8 @@ This tool converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & C
 
 ## Create your Data Model :
 
+See below how to Model with SQL Architect for OpenAPI:
+
 ![img.png](img.png)
 
 ## Generate your API: 
@@ -15,11 +17,17 @@ This tool converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & C
 
 ## View your API: 
 
-[View your APIs once generated in Swagger Editor](https://editor.swagger.io/)
+[View your APIs once generated in Swagger Editor : ](https://editor.swagger.io/)
 
 ![img_1.png](img_1.png)
 
 [View your APIs once generated in Apicur Studio](https://studio.apicur.io/)
+
+![img_2.png](img_2.png)
+
+## Next Steps:
+
+Use OpenAPI Code Generation Tools like Swagger Editor or PostMan to generate server stubs or client SDK.
 
 ## How to Model for OpenAPI:
 
