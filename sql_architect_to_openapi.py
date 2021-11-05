@@ -2,54 +2,16 @@ import xmltodict
 import json
 import yaml
 import unidecode
+import sys
 
 """
 The content of the Data Model in SQL Architect will be used as follow:
 
-Download SQL Architect 
+See ReadMe File
 
-http://www.bestofbi.com/page/architect
-
-Table:
-    Logical Name  = API Object Type
-    Physical Name = Examples    
-    Remarks       = Description 
-    Primary Key   = Not Used (complex)  
-
-        Attribute:
-            Logical Name  = API Property Name
-            Physical Name = Examples
-            Remarks       = Description
-            Allow Nulls   = Required / Optional if Ticked
-            Type          = String, Integer, Time, Boolean
-            Default Value = Pattern 
-
-        Relation:
-            Name        = If name contains ignore or color is Grey, the relation will nor refer to sub-object attribute
-            Description = PK Label + FK Label
-            Cardinalite = <NOT IMPLEMENTED>
-
-        Special Attributes
-            Name          = _PATH (Generates a CRUD list of operations)
-                            _PATH default value = Path Prefix
-                            _PATH contains read-only => only get - otherwise get / put / post / delete
-            Physical Name = PATH Name
-
-    The "OpenAPI" object is used to define the API additional detail:
-        "title"           : Physical Name used as API Title
-        "description"     : Physical Name + Remarks used as API Description
-        "version"         : Physical Name used as API Version
-        "contacts"        : Remarks in JSON Format used as API Contacts
-        "license"         : Remarks in JSON Format used as API License
-        "tags"            : Remarks in JSON Format used as API tags
-        "servers"         : Remarks in JSON Format used as API Servers
-        "security"        : Remarks in JSON Format used as API Security
-        "securitySchemes" : Remarks in JSON Format used as API SecuritySchemes
 """
 
 default_data_model = "API_Data_Model_Sample"
-
-
 
 paths_template_list = """
         "${PATH_PREFIX}/${table}s": {
@@ -432,10 +394,14 @@ def let_do_it(data_model : str):
         open_api_yaml["components"] = {"schemas": entities}
 
     yaml_text = yaml.safe_dump(open_api_yaml, indent=3, default_flow_style=False)
-    print(yaml_text)
+    # print(yaml_text)
     yaml_file = data_model+".yaml"
-    print("Ready : " + yaml_file)
     saveFileContent(yaml_text, yaml_file)
 
 if __name__ == '__main__':
-    let_do_it(default_data_model)
+    data_model = default_data_model
+    if (len(sys.argv) == 2):
+        data_model = sys.argv[1]
+    print("Reading : "+data_model+".architect")
+    let_do_it(data_model)
+    print("Ready   : "+data_model+".yaml")
