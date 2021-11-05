@@ -5,7 +5,19 @@ This tool converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & C
 
 [Download SQL Architect](http://www.bestofbi.com/page/architect)
 
+## Create your Data Model :
+
+![img.png](img.png)
+
+## Generate your API: 
+
+    python.exe .\sql_architect_to_openapi.py .\API_Data_Model_Sample
+
+## View your API: 
+
 [View your APIs once generated in Swagger Editor](https://editor.swagger.io/)
+
+![img_1.png](img_1.png)
 
 [View your APIs once generated in Apicur Studio](https://studio.apicur.io/)
 
