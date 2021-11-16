@@ -1,7 +1,7 @@
 
 # SQL Architect to OpenAPI 
 
-This tool converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & CRUD Operations 
+[This tool](https://github.com/bheuse/SQL_Architect_to_OpenAPI) converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & CRUD Operations 
 
 
 ## Create your Data Model :
@@ -34,7 +34,7 @@ Use OpenAPI Code Generation Tools like Swagger Editor or PostMan to generate ser
 
 ## How to Model for OpenAPI:
 
-The content of the Data Model in SQL Architect will be used as follow:
+The content of the SQL Architect Data Model in SQL Architect will be used as follow:
 
 
 
@@ -64,7 +64,7 @@ The content of the Data Model in SQL Architect will be used as follow:
                             _PATH Default value : Used as Path Name Prefix
                             _PATH Remarks : if contains read-only => only get - otherwise get / put / post / delete
 
-    The "OpenAPI" object is used to define the API details in Table attributes:
+    The "OpenAPI" Table is used to define the API details in  attributes:
         "title"           : Physical Name used as API Title
         "description"     : Physical Name + Remarks used as API Description
         "version"         : Physical Name used as API Version
@@ -75,7 +75,7 @@ The content of the Data Model in SQL Architect will be used as follow:
         "security"        : Remarks in JSON Format used as API Security
         "securitySchemes" : Remarks in JSON Format used as API SecuritySchemes
 
-Tabel OpenAPI:
+Table OpenAPI:
 
 ![img_3.png](img_3.png)
 

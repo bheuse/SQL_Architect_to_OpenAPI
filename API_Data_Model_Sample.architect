@@ -329,15 +329,14 @@ Can be extracted from Catalog Bundles</remarks>
 }</remarks>
     </column>
     <column id="COL70" populated="true" UUID="f1af196f-8ed1-44b2-a3ce-1e8d3eff5846" autoIncrement="false" autoIncrementSequenceName="NEF Business Model_servers_seq" defaultValue="See Remarks - JSON Format" name="servers" nullable="0" physicalName="servers" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>[
-      {
-         &quot;url&quot;: &quot;http://${DOMAIN}/${VERSION}/&quot;,
-         &quot;description&quot;: &quot;Sample Play Ground Release 22-03&quot;,
-         &quot;variables&quot;: {
-            &quot;DOMAIN&quot;: {
-               &quot;default&quot;: &quot;sample.sample.com&quot;,
-               &quot;description&quot;: &quot;The Sample URL&quot;
-            },
+     <remarks>[  {
+     &quot;url&quot;: &quot;http://${DOMAIN}/${VERSION}/&quot;,
+     &quot;description&quot;: &quot;Sample Play Ground Release 22-03&quot;,
+     &quot;variables&quot;: {
+        &quot;DOMAIN&quot;: {
+           &quot;default&quot;: &quot;sample.sample.com&quot;,
+           &quot;description&quot;: &quot;The Sample URL&quot;
+         },
             &quot;VERSION&quot;: {
                &quot;default&quot;: &quot;22-03&quot;,
                &quot;description&quot;: &quot;Release Version&quot;
@@ -412,21 +411,21 @@ Can be extracted from Catalog Bundles</remarks>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="0.9999999999999997" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
-  <table-pane table-ref="TAB1" x="79" y="217" bgColor="0xf6bcbc" fgColor="0xb36d00" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB9" x="48" y="654" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB14" x="79" y="410" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB23" x="580" y="292" bgColor="0xbfd6ff" fgColor="0x0000cc" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB33" x="386" y="549" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB36" x="419" y="96" bgColor="0xbfd6ff" fgColor="0x0000cc" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB42" x="656" y="22" bgColor="0xbfd6ff" fgColor="0x5a6986" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB45" x="872" y="140" bgColor="0xbfd6ff" fgColor="0x5a6986" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB48" x="368" y="753" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB55" x="812" y="409" bgColor="0xbfd6ff" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB60" x="743" y="818" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
-  <table-pane table-ref="TAB64" x="89" y="19" bgColor="0xeeeeee" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB1" x="79" y="976" bgColor="0xf6bcbc" fgColor="0xb36d00" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB9" x="48" y="1413" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB14" x="79" y="1169" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB23" x="580" y="1051" bgColor="0xbfd6ff" fgColor="0x0000cc" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB33" x="386" y="1308" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB36" x="419" y="855" bgColor="0xbfd6ff" fgColor="0x0000cc" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB42" x="656" y="781" bgColor="0xbfd6ff" fgColor="0x5a6986" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB45" x="872" y="899" bgColor="0xbfd6ff" fgColor="0x5a6986" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB48" x="368" y="1512" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB55" x="812" y="1168" bgColor="0xbfd6ff" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB60" x="743" y="1577" bgColor="0xf6bcbc" fgColor="0x000000" rounded="false" dashed="false"/>
+  <table-pane table-ref="TAB64" x="94" y="96" bgColor="0xeeeeee" fgColor="0x000000" rounded="false" dashed="false"/>
   <table-link relationship-ref="REL75" pkConnection="0.7125" fkConnection="0.25874125874125875" rLineColor="0x000000" pkLabelText="Has Teams" fkLabelText="Partners" orientation="132"/>
   <table-link relationship-ref="REL84" pkConnection="0.6993006993006993" fkConnection="0.2937062937062937" rLineColor="0x377eb8" pkLabelText="Includes" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL86" pkConnection="0.14685314685314685" fkConnection="0.5764705882352941" rLineColor="0x000000" pkLabelText="Proposes" fkLabelText="Bundles" orientation="20"/>
+  <table-link relationship-ref="REL86" pkConnection="0.4186046511627907" fkConnection="0.5411764705882353" rLineColor="0x000000" pkLabelText="Proposes" fkLabelText="Bundles" orientation="18"/>
   <table-link relationship-ref="REL87" pkConnection="0.3986013986013986" fkConnection="0.6858638743455497" rLineColor="0x000000" pkLabelText="Offers" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL89" pkConnection="0.34965034965034963" fkConnection="0.9476439790575916" rLineColor="0x000000" pkLabelText="Provides" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL88" pkConnection="0.7482517482517482" fkConnection="0.24475524475524477" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
