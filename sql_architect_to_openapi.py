@@ -144,6 +144,14 @@ tables = {}
 relations = {}
 
 
+def log():
+    # print("project : " + str(project))
+    # print("entities : " + str(entities))
+    # print("links : " + str(links))
+    # print("tables : " + str(tables))
+    # print("relations : " + str(relations))
+    return
+
 # Util
 def clean_name(name: str) -> str:
     return unidecode.unidecode(name.strip()).replace(" ", "_").replace("\\", "_").replace("'", "_").replace("/", "-").replace("_fk", "")
@@ -171,15 +179,16 @@ def find_table(table_name):
 
 
 def collect_links():
-    global project
+    global entities, links, tables, relations, project
     for relation in relations:
         link = dict()
         if ("ignore" in relation["@name"]) :
-            continue  # Ignore Grey Links starting with ignore
+            continue  # Ignore Grey Links or starting with ignore
         link["TableContenante"] = relation["@pk-table-ref"]   # find_table_name(relation["@pk-table-ref"])
         link["TableContenue"]   = relation["@fk-table-ref"]   # find_table_name(relation["@fk-table-ref"])
         link["Cardinalite"]     = relation["@fkCardinality"]
         link["Name"]            = clean_name(relation["@name"])
+        link["Description"]     = "No Description"
         ignore = False
         for tlink in project["play-pen"]["table-link"]:
             if (tlink["@rLineColor"] == "0x999999"):
@@ -188,8 +197,8 @@ def collect_links():
             if (tlink["@relationship-ref"] == relation["@id"]):
                 link["Description"] = clean_name(tlink["@pkLabelText"]) + " " + clean_name(tlink["@fkLabelText"])
                 if (link["Description"] == " "): link["Description"] = link["Name"]
-        if (ignore is False) :
-            links[relation["@id"]] = link
+            if (ignore is False) :
+                links[relation["@id"]] = link
 
 
 def find_table_contenues(table_contenante) -> list:
@@ -257,6 +266,7 @@ def handle_attribute(data_type, att):
 
 
 def collect_tables():
+    global entities, links, tables, relations, project
     for table in tables:
         data_type, entity_name = handle_object(table)
         for folder in table["folder"]:
@@ -296,7 +306,7 @@ def create_path():
     return f_paths_template
 
 
-def let_do_it(data_model : str):
+def lets_do_it(data_model : str):
     global entities, links, tables, relations, project
 
     # Reading architect file
@@ -315,6 +325,8 @@ def let_do_it(data_model : str):
     collect_links()
 
     collect_tables()
+
+    log()
 
     for entity in entities:
         LINK_TABLE_CONT = find_table_contenues(entities[entity]["TABLE"])
@@ -384,8 +396,8 @@ def let_do_it(data_model : str):
         del entities[entity]["RELATIONS"]
         del entities[entity]["NAME"]
         if ("PATH_OPERATION" in entities[entity]):  del entities[entity]["PATH_OPERATION"]
-        if ("PATH_PREFIX" in entities[entity]):  del entities[entity]["PATH_PREFIX"]
-        if ("PATH"  in entities[entity]):        del entities[entity]["PATH"]
+        if ("PATH_PREFIX" in entities[entity]):     del entities[entity]["PATH_PREFIX"]
+        if ("PATH"  in entities[entity]):           del entities[entity]["PATH"]
 
     open_api_yaml["paths"] = paths_to_create
     if "components" in open_api_yaml:
@@ -403,5 +415,5 @@ if __name__ == '__main__':
     if (len(sys.argv) == 2):
         data_model = sys.argv[1]
     print("Reading : "+data_model+".architect")
-    let_do_it(data_model)
+    lets_do_it(data_model)
     print("Ready   : "+data_model+".yaml")
