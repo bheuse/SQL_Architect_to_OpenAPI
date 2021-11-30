@@ -13,7 +13,7 @@ See below how to Model with SQL Architect for OpenAPI:
 
 ## Generate your API: 
 
-    python.exe .\sql_architect_to_openapi.py .\API_Data_Model_Sample
+    python    .\sql_architect_to_openapi.py .\API_Data_Model_Sample
     Reading : .\API_Data_Model_Sample.architect
     Ready   : .\API_Data_Model_Sample.yaml
 
@@ -31,7 +31,7 @@ See below how to Model with SQL Architect for OpenAPI:
 
 Use OpenAPI Code Generation Tools like Swagger Editor or PostMan to generate server stubs or client SDK.
 
-## How to Model for OpenAPI:
+## How to Model in SQL Architect for OpenAPI:
 
 The content of the SQL Architect Data Model in SQL Architect will be used as follow:
 
@@ -120,7 +120,7 @@ Use OpenAPI Code Generation Tools like Swagger Editor or PostMan to generate ser
 
 
 
-## How to Model for DBSchema:
+## How to Model in DBSchema for OpenAPI:
 
 The content of the DBSchema Data Model in DBSchema will be used as follow:
 
@@ -179,3 +179,5 @@ The content of the DBSchema Data Model in DBSchema will be used as follow:
         "servers"         : Description in JSON Format used as API Servers
         "security"        : Description in JSON Format used as API Security
         "securitySchemes" : Description in JSON Format used as API SecuritySchemes
+
+![img_6.png](img_6.png)
