@@ -135,11 +135,6 @@ The content of the DBSchema Data Model in DBSchema will be used as follow:
         Options Prepend Script : For Future use ?
         Primary Key   = Not Used (complex)  
 
-    if (att["@type"] == "varchar"): property["type"]   = "string"
-    if (att["@type"] == "boolean"): property["type"]   = "boolean"
-    if (att["@type"] == "integer"): property["type"]   = "integer"
-    if (att["@type"] == "int")    : property["type"]   = "integer"
-
         Attribute:
             Name          = API Property Name
             Description   = <Description> [Examples: <Examples>]
