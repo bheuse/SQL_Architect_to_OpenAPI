@@ -5,12 +5,9 @@ import unidecode
 import sys
 import os
 import re
-from dicttoxml import dicttoxml
 
 """
-The content of the Data Model in SQL Architect will be used as follow:
-
-See ReadMe File
+The content of the Data Model in DB Schema will be used as in ReadMe File
 
 """
 
@@ -140,20 +137,16 @@ paths_template_parameters = """
 """
 
 # Objects of Interest
-project = {}
-entities = {}
-links = {}
-tables = {}
-relations = {}
-
+tables   = {}  # From the Schema
+links    = {}  # From the Schema
+entities = {}  # To OpenAPI Objects
 
 def log():
-    # print("project : " + str(project))
-    # print("entities : " + str(entities))
-    # print("links : " + str(links))
-    # print("tables : " + str(tables))
-    # print("relations : " + str(relations))
+    # print("entities  : " + str(entities))
+    # print("links     : " + str(links))
+    # print("tables    : " + str(tables))
     return
+
 
 # Util
 def clean_name(name: str) -> str:
@@ -167,41 +160,11 @@ def saveFileContent(content, file_name: str):
     return content
 
 
-def find_table_name(table_id):
-    for table in entities.keys():
-        if (entities[table]["TABLE"] == table_id):
-            return entities[table]["NAME"]
-    return None
-
-
 def find_table(table_name):
     for table in entities.keys():
         if (entities[table]["NAME"] == table_name):
             return entities[table]
     return None
-
-
-def collect_links():
-    global entities, links, tables, relations, project
-    for relation in relations:
-        link = dict()
-        if ("ignore" in relation["@name"]) :
-            continue  # Ignore Grey Links or starting with ignore
-        link["TableContenante"] = relation["@pk-table-ref"]   # find_table_name(relation["@pk-table-ref"])
-        link["TableContenue"]   = relation["@fk-table-ref"]   # find_table_name(relation["@fk-table-ref"])
-        link["Cardinalite"]     = relation["@fkCardinality"]
-        link["Name"]            = clean_name(relation["@name"])
-        link["Description"]     = "No Description"
-        ignore = False
-        for tlink in project["play-pen"]["table-link"]:
-            if (tlink["@rLineColor"] == "0x999999"):
-                ignore = True  # Ignore Grey Links
-                continue
-            if (tlink["@relationship-ref"] == relation["@id"]):
-                link["Description"] = clean_name(tlink["@pkLabelText"]) + " " + clean_name(tlink["@fkLabelText"])
-                if (link["Description"] == " "): link["Description"] = link["Name"]
-            if (ignore is False) :
-                links[relation["@id"]] = link
 
 
 def find_table_contenues(table_contenante) -> list:
@@ -212,77 +175,138 @@ def find_table_contenues(table_contenante) -> list:
     return lks
 
 
-def handle_object(table):
+def handle_table(table):
+    # @name, @spec, comment,
+    # Not used : options, pre_script, post_script
+    # Not usable : @prior,
     data_type = {}
     name = clean_name(table["@name"])
-    # data_type["required"] = []
     data_type["type"] = "object"
-    if (table["remarks"]):
-        data_type["description"] = table["remarks"]
-    else:
-        data_type["description"] = "No Description for " + table["@name"]
-    data_type["example"]    = table["@physicalName"]
+    data_type["description"] = table["comment"] if ("comment"     in table) else "No Description for " + table["@name"]
+    data_type["options"] = table["options"]     if ("options"     in table) else ""
+    data_type["append"]  = table["post_script"] if ("post_script" in table) else ""
+    data_type["prepend"] = table["pre_script"]  if ("pre_script"  in table) else ""
+    data_type["example"] = table["@spec"]       if ("@spec"       in table) else ""
     data_type["properties"] = {}
     data_type["NAME"]       = name
-    data_type["TABLE"]      = table["@id"]
+    data_type["TABLE"]      = table["@name"]
     data_type["RELATIONS"]  = {}
     return data_type, name
 
 
-def handle_attribute(data_type, att):
-    this_property = {}
+def handle_attribute(data_type, att, entity_name):
+    # "@name"   : "Name"    => Property Name
+    # "@type"   : "varchar" => Type
+    # "@length" : "255"     => Not Used
+    # "@jt"     : "12",     => Type Related Information ?
+    # "@mandatory" : "y"    => Required
+    # "@to do"     : "1"    => Not Used
+    # "comment"    :        => Description
+    # "@defo"      : [default] => Example
+
     name = clean_name(att["@name"])
+
     if (name == "_PATH"):
-        data_type["PATH"]        = att["@physicalName"]
-        data_type["PATH_PREFIX"] = att["@defaultValue"]
-        data_type["PATH_OPERATION"] = "READ-WRITE"
-        if (att["remarks"] is not None):
-            data_type["PATH_OPERATION"] = att["remarks"]
-    this_property["type"] = "INVALID"
-    if (att["remarks"] is None):
-        this_property["description"] = "No Description for " + att["@name"]
-    else:
-        this_property["description"] = att["remarks"]
-    if (att["@physicalName"] is None):
-        this_property["example"] = "No example for " + att["@name"]
-    else:
-        this_property["example"] = att["@physicalName"]
-    if (att["@nullable"] == "1"):
-        pass
-        # this_property["required"]     = False
-    else:
-        if (name != "_PATH"):
-            if "required" not in data_type : data_type["required"] = list()
-            data_type["required"].append(name)
-            # this_property["required"]     = True
-    this_property["pattern"] = att["@defaultValue"]
-    if (att["@type"] == "12"): this_property["type"]   = "string"
-    if (att["@type"] == "4"):  this_property["type"]   = "integer"
-    if (att["@type"] == "92"): this_property["type"]   = "string"
-    if (att["@type"] == "92"): this_property["format"] = "date-time"
-    if (att["@type"] == "16"): this_property["type"]   = "boolean"
-    if (this_property["type"] == "INVALID"):
+        data_type["PATH"]           = clean_name(entity_name)
+        data_type["PATH_PREFIX"]    = att["defo"]     if ("defo" in att)    else "/"+clean_name(entity_name).lower()
+        data_type["PATH_OPERATION"] = att["comment"]  if ("comment" in att) else "READ-WRITE"
+        return data_type, name
+
+    property = {}
+    property["description"]    = att["comment"]  if ("comment" in att) else "No Description for " + att["@name"]
+    if ("@defo" in att): property["pattern"] = att["@defo"]
+
+    property["example"] = re.sub(".*xample:" , "" , property["description"])
+
+    if (not(("mandatory" in att) and (att["mandatory"] != "y"))):
+        # Required property
+        if "required" not in data_type : data_type["required"] = list()
+        data_type["required"].append(name)
+
+    property["type"] = "INVALID"
+    if (att["@type"] == "text")     : property["type"]   = "string"
+    if (att["@type"] == "varchar")  : property["type"]   = "string"
+    if (att["@type"] == "boolean")  : property["type"]   = "boolean"
+    if (att["@type"] == "integer")  : property["type"]   = "integer"
+    if (att["@type"] == "numeric")  : property["type"]   = "number"
+    if (att["@type"] == "decimal")  : property["type"]   = "number"
+    if (att["@type"] == "int")      : property["type"]   = "integer"
+    if (att["@type"] == "datetime") : property["type"]   = "string"
+    if (att["@type"] == "datetime") : property["format"] = "date-time "
+    if (att["@type"] == "date")     : property["type"]   = "string"
+    if (att["@type"] == "date")     : property["format"] = "date"
+    if (property["type"] == "INVALID"):
+        property["type"]  = att["@type"]
         print("Unsupported Attribute Type : " + att["@type"])
-    if (name != "_PATH"):
-        data_type["properties"][name] = this_property
+    data_type["properties"][name] = property
     return data_type, name
 
 
-def collect_tables():
-    global entities, links, tables, relations, project
+def handle_link(data_type, relation, entity_name):
+    # "@name"       : "fk_ue_restrictions_service",
+    # "@to_schema"  : "NEF_MarketPlace_DataModel",
+    # "@to_table"   : "Service",
+    # "@type"       : "Identifying",
+    # "comment"     : "Service Owner"
+    global entities, links, tables
+    link = dict()
+    if ("ignore" in relation["@name"]) :
+        # Ignore  Links with ignore
+        return data_type, relation["@name"]
+    else:
+        name = relation["@name"]
+        ignore = False
+    link["TableContenante"] = relation["@to_table"]
+    link["TableContenue"]   = entity_name
+    link["Name"]            = clean_name(relation["@name"])
+    if "comment" in relation :
+        link["Description"] = relation["comment"]
+    else:
+        link["Description"] = "No Description"
+    #  Identifying / NonIdentifyingMandatory / OneToOne  / ManyToMany
+    link["Cardinality"] = relation["@type"]
+
+    links[link["Name"]] = link
+    data_type["RELATIONS"][link["Name"]] = link
+
+    return data_type, name
+
+
+def collect_entities_links():
+    global entities, links, tables
     for table in tables:
-        data_type, entity_name = handle_object(table)
-        for folder in table["folder"]:
-            if "column" not in folder: continue
-            column = folder["column"]
-            if isinstance(column, list):
-                for col in column:
-                    data_type, att_name = handle_attribute(data_type, col)
+        # print(table)
+        data_type, entity_name = handle_table(table)
+        if "column" in table:
+            if isinstance(table["column"], list):
+                for col in table["column"]:
+                    data_type, att_name = handle_attribute(data_type, col, entity_name)
             else:
-                data_type, att_name = handle_attribute(data_type, column)
+                data_type, att_name = handle_attribute(data_type, table["column"], entity_name)
+        data_type["RELATIONS"] = {}
+        if "fk" in table:
+            if isinstance(table["fk"], list):
+                for rel in table["fk"]:
+                    data_type, att_name = handle_link(data_type, rel, entity_name)
+            else:
+                data_type, att_name = handle_link(data_type, table["fk"], entity_name)
         if ("ignore" in data_type["example"]) :
             continue
         entities[entity_name] = data_type
+
+
+def handle_links():
+    for link in links:
+        property = dict()
+        property["description"] = links[link]["Description"]
+        if (links[link]["Cardinality"] == "OneToOne") :
+            property["$ref"] = "#/components/schemas/" + links[link]["TableContenue"]
+        else:
+            property["type"] = "array"
+            property["items"] = {}
+            property["items"]["$ref"] = "#/components/schemas/" + links[link]["TableContenue"]
+        table = find_table(links[link]["TableContenante"])
+        table["properties"][links[link]["TableContenue"]] = property
 
 
 def paths_table(table: str, path_prefix: str = "", paths_template=""):
@@ -308,97 +332,32 @@ def create_path():
             sep = ", "
     return f_paths_template
 
-def lets_do_dbschema(data_model : str):
-    data_model = re.sub(".*\\" + os.sep , "", data_model)
-    xml =       "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
-    xml = xml + "   <project name=\""+data_model+"\" id=\"Project-2cc\" database=\""+"LogicalDesign"+"\" >"
-    xml = xml + "       <schema name=\""+data_model+"\" >"
-    x, y = 0, 0
-    for entity in entities:
-        x, y = x + 25, y + 25
-        # entity : type, description, example
-        xml = xml + "<table name=\""+entity+"\" prior=\"Entity\" spec=\"\" >"
-        xml = xml + "<comment><![CDATA["+entities[entity]["description"]+"]]></comment>\n"
-        xml = xml + "<options><![CDATA[" + entities[entity]["example"] + "]]></options>\n"
-        xml = xml + "<pre_script><![CDATA[" + entities[entity]["example"] + "]]></pre_script>\n"
-        xml = xml + "<post_script><![CDATA[" + entities[entity]["example"] + "]]></post_script>\n"
-        # property: type, description, example, pattern
-        for property in entities[entity]["properties"]:
-            prop = entities[entity]["properties"][property]
-            add = ""
-            if ("required" in entities[entity]) and (property in entities[entity]["required"]):
-                add = " mandatory=\"y\" "
-            type = "type=\"varchar\""
-            if "type" in prop:
-                if (prop["type"]=="integer"):
-                    type = "type=\"integer\""
-                elif (prop["type"]=="string"):
-                    type = "type=\"varchar\""
-                elif (prop["type"]=="boolean"):
-                    type = "type=\"boolean\""
-            xml = xml + "<column name=\"" + property + "\" "+type+" length=\"255\" "+add+"jt=\"12\" todo=\"1\">\n"
-            if "pattern" in prop:
-                xml = xml + "<defo> <![CDATA["+prop["pattern"]+"]]> </defo>\n"
-            if "description" in prop:
-                xml = xml + "<comment> <![CDATA["+prop["description"]+"]]> </comment>\n"
-            if "example" in prop:
-                xml = xml + "<options><![CDATA[" + prop["example"] + "]]></options>\n"
-            xml = xml + "</column>\n"
-        # Links
-        for l in links :
-            link = links[l]
-            # link: TableContenante, TableContenue, Cardinalite, Name, Description
-            if (link["TableContenue"] != entity): continue
-            xml = xml + "<fk name=\""+link["Name"]+"\" to_schema=\""+data_model+"\" to_table=\""+link["TableContenante"]+"\" type=\"Identifying\" >\n"
-            xml = xml + "<comment><![CDATA[" + link["Description"] + "]]></comment></fk>\n"
-        xml = xml + "</table>\n"
-    xml = xml + "       </schema>"
-    xml = xml + "<layout name=\"Default Layout\" id=\"Layout-686\" show_relation=\"columns\" >\n"
-    for entity in entities:
-        xml = xml + "<entity schema=\"NEF_Business_Model\" name=\""+entity+"\"  color=\"3986C1\" x=\""+str(x)+"\" y=\""+str(y)+"\"/>\n"
-    xml = xml + "   </layout>\n"
-    xml = xml + "</project>\n"
-    return xml
-
-
 
 def lets_do_it(data_model : str):
-    global entities, links, tables, relations, project
+    global entities, links, tables
 
-    # Reading architect file
-    myFile = open(data_model + ".architect", "r")
-    architect = myFile.read()
+    # Reading dbschema file
+    myFile = open(data_model + ".dbs", "r")
+    dbschema = myFile.read()
     myFile.close()
-    obj = xmltodict.parse(architect)
-    saveFileContent(json.dumps(obj, indent=3), data_model + ".json")
+    dict_schema  = xmltodict.parse(dbschema)
+    saveFileContent(json.dumps(dict_schema, indent=3), data_model + ".json")
 
-    # Collecting architect entities
-    project   = obj["architect-project"]
-    database  = project["target-database"]
-    tables    = database["table"]
-    relations = database["relationships"]["relationship"]
+    # Collecting Table & Links
+    tables   = dict_schema["project"]["schema"]["table"]
+    collect_entities_links()
 
-    collect_links()
+    # Handle Relationships between entities
+    handle_links()
 
-    collect_tables()
-
-    log()
-
-    for entity in entities:
-        LINK_TABLE_CONT = find_table_contenues(entities[entity]["TABLE"])
-        for rel in LINK_TABLE_CONT:
-            rel["TableContenanteID"] = rel["TableContenante"]
-            rel["TableContenueID"]   = rel["TableContenue"]
-            rel["TableContenante"]   = find_table_name(rel["TableContenante"])
-            rel["TableContenue"]     = find_table_name(rel["TableContenue"])
-            entities[entity]["RELATIONS"][rel["Name"]] = rel
-            this_property = dict()
-            this_property["description"] = rel["Description"]
-            this_property["$ref"] = "#/components/schemas/" + rel["TableContenue"]
-            entities[entity]["properties"][rel["TableContenue"]] = this_property
-
+    # Create API Operations
     paths_to_create = json.loads("{" + create_path() + "}")
 
+    # What did we get ?
+    log()
+
+
+    # API Information Properties
     open_api_yaml = dict()
     open_api_yaml["openapi"] = "3.0.2"
     open_api_yaml["info"] = {}
@@ -410,15 +369,15 @@ def lets_do_it(data_model : str):
     open_api_yaml["info"]["contact"]["url"]   = "https://www.gadseca.org/"
     open_api_yaml["info"]["contact"]["email"] = "bheuse@gmail.com"
 
-    if "OpenAPI" in entities :
+    if "OpenAPI" in entities:
         if ("title" in entities["OpenAPI"]["properties"]):
-            open_api_yaml["info"]["title"]       = entities["OpenAPI"]["properties"]["title"]["example"]
+            open_api_yaml["info"]["title"]       = entities["OpenAPI"]["properties"]["title"]["description"]
 
         if ("version" in entities["OpenAPI"]["properties"]):
-            open_api_yaml["info"]["version"]     = entities["OpenAPI"]["properties"]["version"]["example"]
+            open_api_yaml["info"]["version"]     = entities["OpenAPI"]["properties"]["version"]["description"]
 
         if ("description" in entities["OpenAPI"]["properties"]):
-            open_api_yaml["info"]["description"] = entities["OpenAPI"]["properties"]["description"]["example"] + " " + entities["OpenAPI"]["properties"]["description"]["description"]
+            open_api_yaml["info"]["description"] = entities["OpenAPI"]["properties"]["description"]["description"]
 
         if ("contact" in entities["OpenAPI"]["properties"]):
             contacts = json.loads(entities["OpenAPI"]["properties"]["contact"]["description"])
@@ -445,40 +404,45 @@ def lets_do_it(data_model : str):
             open_api_yaml["components"] = dict()
             open_api_yaml["components"]["securitySchemes"] = securitySchemes
 
+        if ("externalDocs" in entities["OpenAPI"]["properties"]):
+            externalDocs = json.loads(entities["OpenAPI"]["properties"]["externalDocs"]["description"])
+            open_api_yaml["info"]["externalDocs"] = externalDocs
+
+        if ("terms" in entities["OpenAPI"]["properties"]):
+            terms = json.loads(entities["OpenAPI"]["properties"]["externalDocs"]["terms"])
+            open_api_yaml["info"]["terms"] = terms
+
         del entities["OpenAPI"]
 
+    # Clean-up before generation
     for entity in entities:
         del entities[entity]["TABLE"]
         del entities[entity]["RELATIONS"]
         del entities[entity]["NAME"]
+        del entities[entity]["prepend"]
+        del entities[entity]["append"]
+        del entities[entity]["options"]
         if ("PATH_OPERATION" in entities[entity]):  del entities[entity]["PATH_OPERATION"]
-        if ("PATH_PREFIX" in entities[entity]):     del entities[entity]["PATH_PREFIX"]
-        if ("PATH"  in entities[entity]):           del entities[entity]["PATH"]
+        if ("PATH_PREFIX"    in entities[entity]):  del entities[entity]["PATH_PREFIX"]
+        if ("PATH"           in entities[entity]):  del entities[entity]["PATH"]
 
+    # Add Paths
     open_api_yaml["paths"] = paths_to_create
     if "components" in open_api_yaml:
         open_api_yaml["components"]["schemas"] = entities
     else:
         open_api_yaml["components"] = {"schemas": entities}
 
+    # Done - Save
     yaml_text = yaml.safe_dump(open_api_yaml, indent=3, default_flow_style=False)
-    # print(yaml_text)
     yaml_file = data_model+".yaml"
     saveFileContent(yaml_text, yaml_file)
-
-    xml_text = dicttoxml(open_api_yaml, attr_type=False).decode("utf-8")
-    print(xml_text)
-    xml_file = data_model + ".xml"
-    saveFileContent(xml_text, xml_file)
-
-    # dbs_text = lets_do_dbschema(data_model)
-    # dbs_file = data_model + ".dbs"
-    # saveFileContent(dbs_text, dbs_file)
+    # print(yaml_text)
 
 if __name__ == '__main__':
     data_model = default_data_model
     if (len(sys.argv) == 2):
         data_model = sys.argv[1]
-    print("Reading : "+data_model+".architect")
+    print("Reading : "+data_model+".dbs")
     lets_do_it(data_model)
     print("Ready   : "+data_model+".yaml")
