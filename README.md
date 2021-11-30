@@ -94,7 +94,7 @@ Becomes:
 
 Project Type muse be "LogicalDesign"
 
-See below how to Model with SQL Architect for OpenAPI:
+See below how to Model with DbSchema for OpenAPI:
 
 ![img_5.png](img_5.png)
 
