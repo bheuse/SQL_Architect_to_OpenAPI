@@ -1,361 +1,42 @@
 import xmltodict
 import json
 import yaml
+import unittest
 import unidecode
 import sys
 import os
 import re
+from jsonschema import validate
+import markdown
+import logging
+import datetime
+from termcolor     import colored
+import util as ut
+
+timestamp = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
+logFile   = "."+os.sep+"db_schema_to_openapi.log"
+logging.basicConfig(filename=logFile, filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+
 
 """
 The content of the Data Model in DB Schema will be used as in ReadMe File
-
 """
 
 default_data_model = "API_Data_Model_Sample"
 
-paths_template_list = """
-        "${PATH_PREFIX}/${table}s": {
-            "summary": "Path used to manage the list of ${table}s.",
-            "description": "The REST endpoint/path used to list and create zero or more `${TABLE}`.  This path contains a `GET` and `POST` operation to perform the list and create tasks, respectively.",
-
-            "get": {
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/${TABLE}"
-                                    }
-                                }
-                            }
-                        },
-                        "description": "Successful response - returns an array of `${TABLE}` entities."
-                    }
-                },
-                "operationId": "get${TABLE}s",
-                "summary": "List All ${TABLE}s",
-                "description": "Gets a list of all `${TABLE}` entities."
-            }
-"""
-paths_template_create = """
-            "post": {
-                "requestBody": {
-                    "description": "A new `${TABLE}` to be created.",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/${TABLE}"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "201": {
-                        "description": "Successful response."
-                    }
-                },
-                "operationId": "create${TABLE}",
-                "summary": "Create a ${TABLE}",
-                "description": "Creates a new instance of a `${TABLE}`."
-            }
-        
-"""
-paths_template_read = """
-        
-        "${PATH_PREFIX}/${table}s/{${table}Id}": {
-            "summary": "Path used to manage a single ${TABLE}.",
-            "description": "The REST endpoint/path used to get, update, and delete single instances of an `${TABLE}`.  This path contains `GET`, `PUT`, and `DELETE` operations used to perform the get, update, and delete tasks, respectively.",
-
-            "get": {
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/${TABLE}"
-                                }
-                            }
-                        },
-                        "description": "Successful response - returns a single `${TABLE}`."
-                    }
-                },
-                "operationId": "get${TABLE}",
-                "summary": "Get a ${TABLE}",
-                "description": "Gets the details of a single instance of a `${TABLE}`."
-            }
-
-"""
-paths_template_update = """
-            "put": {
-                "requestBody": {
-                    "description": "Updated `${TABLE}` information.",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/${TABLE}"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "202": {
-                        "description": "Successful response."
-                    }
-                },
-                "operationId": "update${TABLE}",
-                "summary": "Update a ${TABLE}",
-                "description": "Updates an existing `${TABLE}`."
-            },
-            "delete": {
-                "responses": {
-                    "204": {
-                        "description": "Successful response."
-                    }
-                },
-                "operationId": "delete${TABLE}",
-                "summary": "Delete a ${TABLE}",
-                "description": "Deletes an existing `${TABLE}`."
-            }
-"""
-paths_template_parameters = """            
-            "parameters": [
-                {
-                    "name": "${table}Id",
-                    "description": "A unique identifier for a `${TABLE}`.",
-                    "schema": {
-                        "type": "string"
-                    },
-                    "in": "path",
-                    "required": true
-                }
-            ]
-
-"""
 
 # Objects of Interest
-tables   = {}  # From the Schema
 links    = {}  # From the Schema
 entities = {}  # To OpenAPI Objects
 
-def log():
-    # print("entities  : " + str(entities))
-    # print("links     : " + str(links))
-    # print("tables    : " + str(tables))
-    return
 
 
-# Util
-def clean_name(name: str) -> str:
-    return unidecode.unidecode(name.strip()).replace(" ", "_").replace("\\", "_").replace("'", "_").replace("/", "-").replace("_fk", "")
-
-
-def saveFileContent(content, file_name: str):
-    with open(file_name, "w") as file:
-        content = file.write(content)
-        file.close()
-    return content
-
-
-def find_table(table_name):
-    for table in entities.keys():
-        if (entities[table]["NAME"] == table_name):
-            return entities[table]
-    return None
-
-
-def find_table_contenues(table_contenante) -> list:
-    lks = []
-    for link in links:
-        if (links[link]["TableContenante"] == table_contenante):
-            lks.append(links[link])
-    return lks
-
-
-def handle_table(table):
-    # @name, @spec, comment,
-    # Not used : options, pre_script, post_script
-    # Not usable : @prior,
-    data_type = {}
-    name = clean_name(table["@name"])
-    data_type["type"] = "object"
-    data_type["description"] = table["comment"] if ("comment"     in table) else "No Description for " + table["@name"]
-    data_type["options"] = table["options"]     if ("options"     in table) else ""
-    data_type["append"]  = table["post_script"] if ("post_script" in table) else ""
-    data_type["prepend"] = table["pre_script"]  if ("pre_script"  in table) else ""
-    data_type["example"] = table["@spec"]       if ("@spec"       in table) else ""
-    data_type["properties"] = {}
-    data_type["NAME"]       = name
-    data_type["TABLE"]      = table["@name"]
-    data_type["RELATIONS"]  = {}
-    return data_type, name
-
-
-def handle_attribute(data_type, att, entity_name):
-    # "@name"   : "Name"    => Property Name
-    # "@type"   : "varchar" => Type
-    # "@length" : "255"     => Not Used
-    # "@jt"     : "12",     => Type Related Information ?
-    # "@mandatory" : "y"    => Required
-    # "@to do"     : "1"    => Not Used
-    # "comment"    :        => Description
-    # "@defo"      : [default] => Example
-
-    name = clean_name(att["@name"])
-
-    if (name == "_PATH"):
-        data_type["PATH"]           = clean_name(entity_name)
-        data_type["PATH_PREFIX"]    = att["defo"]     if ("defo" in att)    else "/"+clean_name(entity_name).lower()
-        data_type["PATH_OPERATION"] = att["comment"]  if ("comment" in att) else "READ-WRITE"
-        return data_type, name
-
-    property = {}
-    property["description"]    = att["comment"]  if ("comment" in att) else "No Description for " + att["@name"]
-    if ("@defo" in att): property["pattern"] = att["@defo"]
-
-    property["example"] = re.sub(".*xample:" , "" , property["description"])
-
-    if (not(("mandatory" in att) and (att["mandatory"] != "y"))):
-        # Required property
-        if "required" not in data_type : data_type["required"] = list()
-        data_type["required"].append(name)
-
-    property["type"] = "INVALID"
-    if (att["@type"] == "text")     : property["type"]   = "string"
-    if (att["@type"] == "varchar")  : property["type"]   = "string"
-    if (att["@type"] == "boolean")  : property["type"]   = "boolean"
-    if (att["@type"] == "integer")  : property["type"]   = "integer"
-    if (att["@type"] == "numeric")  : property["type"]   = "number"
-    if (att["@type"] == "decimal")  : property["type"]   = "number"
-    if (att["@type"] == "int")      : property["type"]   = "integer"
-    if (att["@type"] == "datetime") : property["type"]   = "string"
-    if (att["@type"] == "datetime") : property["format"] = "date-time "
-    if (att["@type"] == "date")     : property["type"]   = "string"
-    if (att["@type"] == "date")     : property["format"] = "date"
-    if (property["type"] == "INVALID"):
-        property["type"]  = att["@type"]
-        print("Unsupported Attribute Type : " + att["@type"])
-    data_type["properties"][name] = property
-    return data_type, name
-
-
-def handle_link(data_type, relation, entity_name):
-    # "@name"       : "fk_ue_restrictions_service",
-    # "@to_schema"  : "NEF_MarketPlace_DataModel",
-    # "@to_table"   : "Service",
-    # "@type"       : "Identifying",
-    # "comment"     : "Service Owner"
-    global entities, links, tables
-    link = dict()
-    if ("ignore" in relation["@name"]) :
-        # Ignore  Links with ignore
-        return data_type, relation["@name"]
-    else:
-        name = relation["@name"]
-        ignore = False
-    link["TableContenante"] = relation["@to_table"]
-    link["TableContenue"]   = entity_name
-    link["Name"]            = clean_name(relation["@name"])
-    if "comment" in relation :
-        link["Description"] = relation["comment"]
-    else:
-        link["Description"] = "No Description"
-    #  Identifying / NonIdentifyingMandatory / OneToOne  / ManyToMany
-    link["Cardinality"] = relation["@type"]
-
-    links[link["Name"]] = link
-    data_type["RELATIONS"][link["Name"]] = link
-
-    return data_type, name
-
-
-def collect_entities_links():
-    global entities, links, tables
-    for table in tables:
-        # print(table)
-        data_type, entity_name = handle_table(table)
-        if "column" in table:
-            if isinstance(table["column"], list):
-                for col in table["column"]:
-                    data_type, att_name = handle_attribute(data_type, col, entity_name)
-            else:
-                data_type, att_name = handle_attribute(data_type, table["column"], entity_name)
-        data_type["RELATIONS"] = {}
-        if "fk" in table:
-            if isinstance(table["fk"], list):
-                for rel in table["fk"]:
-                    data_type, att_name = handle_link(data_type, rel, entity_name)
-            else:
-                data_type, att_name = handle_link(data_type, table["fk"], entity_name)
-        if ("ignore" in data_type["example"]) :
-            continue
-        entities[entity_name] = data_type
-
-
-def handle_links():
-    for link in links:
-        property = dict()
-        property["description"] = links[link]["Description"]
-        if (links[link]["Cardinality"] == "OneToOne") :
-            property["$ref"] = "#/components/schemas/" + links[link]["TableContenue"]
-        else:
-            property["type"] = "array"
-            property["items"] = {}
-            property["items"]["$ref"] = "#/components/schemas/" + links[link]["TableContenue"]
-        table = find_table(links[link]["TableContenante"])
-        table["properties"][links[link]["TableContenue"]] = property
-
-
-def paths_table(table: str, path_prefix: str = "", paths_template=""):
-    l_paths_template = paths_template.replace("${PATH_PREFIX}", path_prefix)
-    l_paths_template = l_paths_template.replace("${TABLE}", table)
-    l_paths_template = l_paths_template.replace("${table}", table.lower())
-    return l_paths_template
-
-
-def create_path():
-    f_paths_template = ""
-    sep = ""
-    for entity in entities:
-        if ("PATH" in entities[entity]):
-            if ("read-only" in entities[entity]["PATH_OPERATION"].lower()):
-                l_paths_template = paths_template_list + " } ," + paths_template_read + "," + paths_template_parameters + " }"
-            else:
-                l_paths_template = paths_template_list + " ," + paths_template_create + " } ," + paths_template_read + "," + paths_template_update + "," + paths_template_parameters + " }"
-
-            path   = entities[entity]["PATH"]
-            prefix = entities[entity]["PATH_PREFIX"]
-            f_paths_template = f_paths_template + sep + paths_table(path, path_prefix=prefix, paths_template=l_paths_template)
-            sep = ", "
-    return f_paths_template
-
-
-def lets_do_it(data_model : str):
-    global entities, links, tables
-
-    # Reading dbschema file
-    myFile = open(data_model + ".dbs", "r")
-    dbschema = myFile.read()
-    myFile.close()
-    dict_schema  = xmltodict.parse(dbschema)
-    saveFileContent(json.dumps(dict_schema, indent=3), data_model + ".json")
-
-    # Collecting Table & Links
-    tables   = dict_schema["project"]["schema"]["table"]
-    collect_entities_links()
-
-    # Handle Relationships between entities
-    handle_links()
+def lets_do_openapi_yaml(data_model : str):
+    ut.print_yellow("> lets_do_openapi")
+    global entities, links
 
     # Create API Operations
-    paths_to_create = json.loads("{" + create_path() + "}")
-
-    # What did we get ?
-    log()
-
+    paths_to_create = json.loads("{" + ut.create_path(entities) + "}")
 
     # API Information Properties
     open_api_yaml = dict()
@@ -435,14 +116,151 @@ def lets_do_it(data_model : str):
 
     # Done - Save
     yaml_text = yaml.safe_dump(open_api_yaml, indent=3, default_flow_style=False)
+    ut.print_verbose(yaml_text)
     yaml_file = data_model+".yaml"
-    saveFileContent(yaml_text, yaml_file)
-    # print(yaml_text)
+    ut.saveFileContent(yaml_text, yaml_file)
+
+
+baseURI = "https://amdocs.com/schemas/nef/"
+schemas = {}
+
+
+def lets_do_json_schema(data_model : str):
+    ut.print_yellow("> lets_do_json")
+    json_directory = data_model + "_json"
+    if (not os.path.isdir(json_directory)):
+        os.mkdir(json_directory)
+    for entity in entities:
+        is_root = False
+        json_object = {}
+        json_schema = {}
+        object_desc = entities[entity]
+        ut.print_yellow("["+entity+"]")
+        ut.print_verbose(json.dumps(entities[entity], indent=3))
+        ut.print_verbose(" - description : " + str(object_desc["description"]))
+        ut.print_verbose(" - type        : " + str(object_desc["type"]))
+        ut.print_verbose(" - example     : " + str(object_desc["example"]))
+        ut.print_verbose(" - " + str(object_desc))
+
+        json_schema["$schema"]     = "http://json-schema.org/draft-07/schema"
+        json_schema["$id"]         = baseURI+entity+".json"
+        json_schema["type"]        = "object"
+        json_schema["title"]       = "Schema for " + entity
+        json_schema["description"] = object_desc["description"]
+        json_schema["default"]     = {}
+        json_schema["examples"]    = []
+        json_schema["required"]    = []
+        json_schema["properties"]  = {}
+        json_schema["additionalProperties"] = True
+
+        for property in object_desc["properties"]:
+            if (property == "_ROOT"):
+                is_root = True
+            ut.print_verbose(" #> [" + str(object_desc["properties"][property]) + "]")
+            ut.print_verbose(json.dumps(object_desc["properties"][property], indent=3))
+            property_desc = object_desc["properties"][property]
+            ut.print_verbose(" #>> " + str(property_desc))
+            prop_schema = {}
+            if ("$ref" in property_desc):
+                # Sub-object
+                ut.print_verbose("   #>> object        : " + str(property_desc["$ref"]))
+                item = re.sub("#/components/schemas/" , "" , str(property_desc["$ref"]))
+                prop_schema["$ref"]  = "" + item + "_schema.json"
+                prop_schema["$ref"]  = "#/$defs/" + item + ""
+                json_schema["properties"][item] = prop_schema
+            elif ("items" in property_desc):
+                # Array of Sub-objects
+                ut.print_verbose("   #>> Array objects : " + str(property_desc["items"]["$ref"]))
+                item = re.sub("#/components/schemas/", "", str(property_desc["items"]["$ref"]))
+                prop_schema["type"] = "array"
+                prop_schema["items"] = {"$ref" : "" + item + "_schema.json"}
+                prop_schema["items"] = {"$ref" : "#/$defs/" + item + ""}
+                json_schema["properties"][item+"s"] = prop_schema
+            else:
+                desc = property_desc["description"]
+                found = ut.find_between(desc, "<schema>", "</schema>")
+                desc_schema = {}
+                if (found):
+                    desc = ut.remove_between(desc, "<schema>", "</schema>")
+                    desc_schema = ut.decode_prop_schema(property, found, desc)
+
+                json_object[property_desc["name"]] = property_desc["example"]
+                prop_schema["$id"]          = "#/properties/" + property_desc["name"]
+                prop_schema["type"]         = property_desc["type"]
+                prop_schema["title"]        = property_desc["name"]
+                prop_schema["description"]  = desc.strip()
+                prop_schema["default"]      = ""
+                # prop_schema["examples"]     = [property_desc["example"]]
+
+                prop_schema["validationScript"] = desc_schema["validationScript"] if ("validationScript" in desc_schema) else ""
+                prop_schema["possibleValues"]   = desc_schema["possibleValues"]   if ("possibleValues"   in desc_schema) else ["default_value", "value1" , "value2"]
+                prop_schema["defaultValue"]     = desc_schema["defaultValue"]     if ("defaultValue"     in desc_schema) else "default_value"
+                prop_schema["applicableTo"]     = desc_schema["applicableTo"]     if ("applicableTo"     in desc_schema) else ""
+                prop_schema["minCardinality"]   = desc_schema["minCardinality"]   if ("minCardinality"   in desc_schema) else 1
+                prop_schema["maxCardinality"]   = desc_schema["maxCardinality"]   if ("maxCardinality"   in desc_schema) else 1
+                prop_schema["validFor"]         = desc_schema["validFor"]         if ("validFor"         in desc_schema) else ""
+                prop_schema["format"]           = desc_schema["format"]           if ("format"           in desc_schema) else ""
+                prop_schema["example"]          = desc_schema["example"]          if ("example"          in desc_schema) else ""
+                prop_schema["description"]      = desc_schema["description"]      if ("description"      in desc_schema) else desc
+                prop_schema["markdownDescription"] = desc_schema["markdownDescription"] if ("markdownDescription"  in desc_schema) else ""
+                prop_schema["valueSpecification"]  = desc_schema["valueSpecification"]  if ("valueSpecification"   in desc_schema) else {}
+
+                ut.print_verbose("   #>> name        : " + str(property_desc["name"]))
+                ut.print_verbose("   #>> description : " + str(property_desc["description"]))
+                ut.print_verbose("   #>> type        : " + str(property_desc["type"]))
+                ut.print_verbose("   #>> format      : " + str(property_desc["format"]))
+                ut.print_verbose("   #>> example     : " + str(property_desc["example"]))
+                ut.print_verbose("   #>> pattern     : " + str(property_desc["pattern"]))
+                ut.print_verbose("   #>> format      : " + str(property_desc["format"]))
+                ut.print_verbose("   #>> mandatory   : " + str(property_desc["mandatory"]))
+                if (property_desc["mandatory"]):
+                    json_schema["required"].append(property_desc["name"])
+                json_schema["properties"][property_desc["name"]] = prop_schema
+        ut.print_verbose("Sample Object: "+str(json_object))
+        json_schema["examples"]    = [json_object]
+        schemas[entity] = json_schema
+
+        # Add $defs Sub-Objects Schemas
+        for link in links:
+            cardinality     = links[link]["Cardinality"]
+            TableContenue   = links[link]["TableContenue"]
+            TableContenante = links[link]["TableContenante"]
+            Name            = links[link]["Name"]
+            Descr           = links[link]["Description"]
+            # TableContenante = find_table(links[link]["TableContenante"])
+            if (entity == TableContenante) and ("Optional" not in str(cardinality)):
+                json_schema["required"].append(TableContenue)
+            if (entity == TableContenante) and (str(cardinality)  in ["1", "3"]):
+                json_schema["required"].append(TableContenue)
+
+        if (is_root) :
+            ut.saveFileContent(json.dumps(json_object, indent=3), json_directory + os.sep + entity + ".json")
+            ut.saveFileContent(json.dumps(json_schema, indent=3), json_directory + os.sep + entity + "_schema.json")
+
+    # Add $defs Sub-Objects Schemas
+    for schema in schemas:
+        if "properties" not in schemas[schema]: continue
+        if "_ROOT" in schemas[schema]["properties"] :
+            # del schemas[schema]["properties"]["_ROOT"]
+            schemas[schema]["$defs"] = {}
+            for schema2 in schemas:
+                if "properties" not in schemas[schema]: continue
+                if "_ROOT" in schemas[schema2]["properties"] : continue
+                del schemas[schema2]["$schema"]
+                del schemas[schema2]["$id"]
+                schemas[schema]["$defs"][schema2] = schemas[schema2]
+            ut.saveFileContent(json.dumps(schemas[schema], indent=3), json_directory + os.sep + schema + "_schema.json")
+    ut.print_yellow("< lets_do_json")
+
 
 if __name__ == '__main__':
-    data_model = default_data_model
+    the_data_model = default_data_model
     if (len(sys.argv) == 2):
-        data_model = sys.argv[1]
-    print("Reading : "+data_model+".dbs")
-    lets_do_it(data_model)
-    print("Ready   : "+data_model+".yaml")
+        the_data_model = sys.argv[1]
+    ut.print_blue("Reading : "+the_data_model+".dbs")
+    dbschema = DbSchema()
+    dbschema.read_dbschema(the_data_model)
+
+    lets_do_openapi_yaml(the_data_model)
+    lets_do_json_schema(the_data_model)
+    ut.print_blue("Ready   : "+the_data_model+".yaml")

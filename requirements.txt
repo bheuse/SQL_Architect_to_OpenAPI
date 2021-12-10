@@ -2,3 +2,8 @@ unidecode
 xmltodict
 pyyaml
 dicttoxml
+jsonschema
+markdown
+termcolor
+unittest
+ftplib
