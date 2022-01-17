@@ -5,5 +5,7 @@ dicttoxml
 jsonschema
 markdown
 termcolor
-unittest
-ftplib
+jsonpath_ng
+expiringdict
+requests
+requests_file

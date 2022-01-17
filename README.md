@@ -13,7 +13,7 @@ See below how to Model with SQL Architect for OpenAPI:
 
 ## Generate your API: 
 
-    python    .\sql_architect_to_openapi.py .\API_Data_Model_Sample
+    python    .\data_model_to_openapi.py .\API_Data_Model_Sample
     Reading : .\API_Data_Model_Sample.architect
     Ready   : .\API_Data_Model_Sample.yaml
 
