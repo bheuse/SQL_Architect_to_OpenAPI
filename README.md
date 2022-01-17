@@ -87,6 +87,8 @@ Becomes:
 
 # DbSchema to OpenAPI 
 
+DbSchema conversion is no longer supported - the freemium version does not allow to edit DB Schema. 
+
 [This tool](https://github.com/bheuse/SQL_Architect_to_OpenAPI) converts a DbSchema project into an OpenAPI 3.0.2 Data Model & CRUD Operations 
 
 
