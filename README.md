@@ -1,7 +1,9 @@
 
 # SQL Architect to OpenAPI 
 
-[This tool](https://github.com/bheuse/SQL_Architect_to_OpenAPI) converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & CRUD Operations 
+[This tool](https://github.com/bheuse/SQL_Architect_to_OpenAPI) converts an SQL Architect project into an OpenAPI 3.0.2 Data Model & CRUD Operations.
+
+A JSON Schema can also be generated.
 
 ## Create your Data Model :
 
