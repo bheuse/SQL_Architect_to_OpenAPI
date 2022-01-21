@@ -61,9 +61,35 @@ The content of the SQL Architect Data Model in SQL Architect will be used as fol
 
         Special Attributes
             Name          = _PATH (Generates a CRUD list of operations for this object)
-                            _PATH Physical Name : Used as PATH Name
-                            _PATH Default value : Used as Path Name Prefix
-                            _PATH Remarks : if contains read-only => only get - otherwise get / put / post / delete
+                                _PATH Physical Name : Used as PATH Name
+                                _PATH Default value : Used as Path Name Prefix
+                                    https://domain.com<Default value>/<Physical Name>
+                                    Exemple for https://domain.com/products/tools
+                                      - Default value = "/products"
+                                      - Physical Name = "tools"
+                                _PATH Remarks : Operations to be supported. If contains 
+                                      - read-only          => list (GET /<entities>) - read (GET /<entities>/<entity>) 
+                                      - read-create        => list - read - create (POST /<entities>/<entity>)
+                                      - read-create-patch  => list - read - create - patch (PATCH /<entities>/<entity>)
+                                      - read-write         => list - read - create - update (PUT /<entities>/<entity>) -- delete (DELETE /<entities>/<entity>)
+                                      - otherwise list / get / put / post / delete
+                                      - <parameters>  </parameters> used for parameters description
+                                           Path Parameters   : "path_parameters"  
+                                           Query Paramenters : "get_parameters", "list_parameters", "post_parameters" "patch_parameters", "delete_parameters", "put_parameters",  
+                                           Schema level Parameters : "schema_parameters" 
+                                           Example :
+                                            <parameters> 
+                                               <get_parameters>
+                                                  { "in"       : "query" ,
+                                                     "name"     : "schema" , 
+                                                     "required" : false,
+                                                     "description": "Return the Configuration Schema.",
+                                                     "schema": {
+                                                        "type": "boolean"
+                                                        }
+                                                  }
+                                               </get_parameters>
+                                            </parameters>
 
     The "OpenAPI" Table is used to define the API details in  attributes:
         "title"           : Physical Name used as API Title
@@ -84,6 +110,39 @@ Becomes:
 
 ![img_4.png](img_4.png)
 
+## Code Generation
+
+![img_7.png](img_7.png)
+
+The tool supports code generation, using [mako template engine](https://docs.makotemplates.org/en/latest/usage.html).
+
+All files stored in <model>_templates are considered as being Mako Template files.
+
+They will be scanned and template generated in the <model>_artifacts directory.
+
+The variables that can be used in the template are generated on the first schema generation, in file 
+
+`
+    <model>_artifacts/<model>_context.yaml
+
+All entities, attributes are documented in the context and can be used for code generation.`
+
+An example of mako template for DDL generation:
+ 
+    <%doc>
+        DDL Template for VoltDB
+    </%doc>
+    # DDL for ${DATAMODEL}
+    
+    % for ENTITY in ENTITIES:
+    CREATE TABLE ${ENTITY} (
+    % for PROP in ENTITIES[ENTITY]["properties"]:
+        ${PROP}  VARCHAR ${'' if loop.last else ','}
+    % endfor
+    );
+    % endfor
+
+Java code and most of other artifact can be generated in this manner, defining the appropriate templates.
 
 # DbSchema to OpenAPI 
 
@@ -108,21 +167,10 @@ See below how to Model with DbSchema for OpenAPI:
     Reading : .\API_Data_Model_Sample.dbs
     Ready   : .\API_Data_Model_Sample.yaml
 
-## View your API: 
-
-[View your APIs once generated in Swagger Editor : ](https://editor.swagger.io/)
-
-![img_1.png](img_1.png)
-
-[View your APIs once generated in Apicurio Studio](https://studio.apicur.io/)
-
-![img_2.png](img_2.png)
 
 ## Next Steps:
 
 Use OpenAPI Code Generation Tools like Swagger Editor or PostMan to generate server stubs or client SDK.
-
-
 
 ## How to Model in DBSchema for OpenAPI:
 

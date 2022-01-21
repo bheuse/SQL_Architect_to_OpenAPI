@@ -9,3 +9,4 @@ jsonpath_ng
 expiringdict
 requests
 requests_file
+mako
